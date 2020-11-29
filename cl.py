@@ -130,16 +130,7 @@ def main():
 
     token = get_oura_personal_token()
 
-    # get_sleep_data(
-    #     token = token,
-    #     out_path= "C:/data/oura/oura_sleep.csv")
-
-    # readiness = get_oura_data(
-    #     token=token,
-    #     data_type = TYPE_READINESS,
-    #     out_path="C:/data/oura/readiness.csv"
-    # )
-
+  
     data = get_all_oura_data(
         token=token,
         out_folder="C:/data/oura"
