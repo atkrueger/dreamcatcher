@@ -8,6 +8,38 @@ from datetime import date
 import json
 from pathlib import Path
 
+TYPE_SLEEP = "sleep"
+TYPE_ACTIVITY = "activity"
+TYPE_READINESS = "readiness"
+
+
+# def json_to_csv(json_obj, out_path : str)-> None:
+    
+#     if out_path != None:
+#         folder = Path(out_path).parent
+#         if not folder.exists():
+#             folder.mkdir(parents=True,exist_ok=True)
+#         df.to_csv(out_path)
+
+def create_url(token: str, start: str, end: str, datatype: str) -> str:
+    """token is personal access token.
+        start and end should be in YYYY-MM-DD format.
+        datatype should be "sleep", "activity", or "readiness"""
+
+    if start ==None:
+        start = '2013-01-01' #founding of Oura company
+    
+    if end==None:
+        end = date.today().strftime("%Y-%m-%d") #today
+    
+    head = "https://api.ouraring.com/v1/"
+    data_type=f"{datatype}?"
+    time = f"start={start}&end={end}"
+    auth = f"&access_token={token}"
+
+    url = head + data_type + time + auth
+    return url
+
 def get_oura_personal_token() -> str:
 
     token = os.getenv("OURA_PERSONAL_TOKEN")
@@ -19,52 +51,58 @@ def get_oura_personal_token() -> str:
     return token
 
 
-def get_sleep_data(token, start = None, end = None, out_path: str = None ):
-    """start, end should be in 'YYYY-MM-DD' format"""
+# def get_sleep_data(token, start = None, end = None, out_path: str = None ):
+#     """start, end should be in 'YYYY-MM-DD' format"""
 
-    if start ==None:
-        start = '2013-01-01' #founding of Oura company
-        print("Start = ", start)
-
-    if end==None:
-        end = date.today().strftime("%Y-%m-%d") #today
-        print("end = ", end)
+#     url = create_url(
+#         token=token,
+#         start=start,
+#         end=end,
+#         datatype="sleep"
+#     )
+#     response = requests.get(url).json()
    
-    
-    head = "https://api.ouraring.com/v1/"
-    data_type="sleep?"
-    time = f"start={start}&end={end}"
-    auth = f"&access_token={token}"
+#     if out_path!=None:
+#         json_to_csv(response['sleep'], out_path)
 
-    url = head + data_type + time + auth
-    # print(url)
+def get_oura_data(token :str, data_type: str, start = None, end = None, out_path : str = None) -> pd.DataFrame:
     
-    sleep_data = requests.get(url)
-    json_sleep = sleep_data.json()
-    #print(json_sleep)
-    #print(type(json_sleep))
-    #print(sleep_data)
-    # json_formatted = json.dumps(json_sleep, indent=4)
-    # print(json_formatted)
+    url = create_url(
+        token=token,
+        start=start,
+        end=end,
+        datatype=data_type
+    )
 
-    df = pd.DataFrame(json_sleep['sleep'])
-    if out_path != None:
+    response = requests.get(url).json()
+
+    df = pd.DataFrame(response[data_type])
+
+    if out_path!=None:
         folder = Path(out_path).parent
         if not folder.exists():
             folder.mkdir(parents=True,exist_ok=True)
         df.to_csv(out_path)
 
+    return df
+    
+
+
+
+
 def main():
 
     token = get_oura_personal_token()
-    # get_sleep_data( 
-    #     start="2020-10-01",
-    #     end="2020-11-30",
-    #     token=token)
 
-    get_sleep_data(
-        token = token,
-        out_path= "C:/data/oura/oura_sleep.csv")
+    # get_sleep_data(
+    #     token = token,
+    #     out_path= "C:/data/oura/oura_sleep.csv")
+
+    readiness = get_oura_data(
+        token=token,
+        data_type = TYPE_READINESS,
+        out_path="C:/data/oura/readiness.csv"
+    )
    
     
 
