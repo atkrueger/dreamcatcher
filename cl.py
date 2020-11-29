@@ -7,10 +7,18 @@ from typing import Tuple
 from datetime import date
 import json
 from pathlib import Path
+from dataclasses import dataclass
 
 TYPE_SLEEP = "sleep"
 TYPE_ACTIVITY = "activity"
 TYPE_READINESS = "readiness"
+ALL_TYPES = [TYPE_SLEEP, TYPE_ACTIVITY, TYPE_READINESS]
+
+@dataclass
+class OuraData:
+    sleep: pd.DataFrame
+    activity: pd.DataFrame
+    readiness: pd.DataFrame
 
 
 # def json_to_csv(json_obj, out_path : str)-> None:
@@ -51,19 +59,7 @@ def get_oura_personal_token() -> str:
     return token
 
 
-# def get_sleep_data(token, start = None, end = None, out_path: str = None ):
-#     """start, end should be in 'YYYY-MM-DD' format"""
 
-#     url = create_url(
-#         token=token,
-#         start=start,
-#         end=end,
-#         datatype="sleep"
-#     )
-#     response = requests.get(url).json()
-   
-#     if out_path!=None:
-#         json_to_csv(response['sleep'], out_path)
 
 def get_oura_data(token :str, data_type: str, start = None, end = None, out_path : str = None) -> pd.DataFrame:
     
@@ -85,11 +81,51 @@ def get_oura_data(token :str, data_type: str, start = None, end = None, out_path
         df.to_csv(out_path)
 
     return df
+
+def get_all_oura_data(token: str, start = None, end = None, out_folder : str = None) -> OuraData:
     
+    if start ==None:
+        start = '2013-01-01' #founding of Oura company
+    
+    if end==None:
+        end = date.today().strftime("%Y-%m-%d") #today
+    
+    if out_folder!= None:
+        folder = Path(out_folder)
+        if not folder.exists():
+            folder.mkdir(parents=True, exist_ok=True)
+        sleep_path = out_folder + '/' + f"sleep ({start}-{end}).csv"
+        readiness_path = out_folder + '/' + f"readiness ({start}-{end}).csv"
+        activity_path = out_folder + '/' + f"activity ({start}-{end}).csv"
+    else:
+        sleep_path = None
+        readiness_path=None
+        activity_path=None
 
+    sleep = get_oura_data(
+        token = token,
+        data_type= TYPE_SLEEP,
+        start=start,end=end,
+        out_path=sleep_path
+    )
 
+    readiness=get_oura_data(
+        token = token,
+        data_type= TYPE_READINESS,
+        start=start,end=end,
+        out_path=readiness_path
+    )
 
+    activity=get_oura_data(
+        token = token,
+        data_type= TYPE_ACTIVITY,
+        start=start,end=end,
+        out_path=activity_path
+    )
 
+    return OuraData(sleep, activity,readiness)
+
+    
 def main():
 
     token = get_oura_personal_token()
@@ -98,13 +134,19 @@ def main():
     #     token = token,
     #     out_path= "C:/data/oura/oura_sleep.csv")
 
-    readiness = get_oura_data(
+    # readiness = get_oura_data(
+    #     token=token,
+    #     data_type = TYPE_READINESS,
+    #     out_path="C:/data/oura/readiness.csv"
+    # )
+
+    data = get_all_oura_data(
         token=token,
-        data_type = TYPE_READINESS,
-        out_path="C:/data/oura/readiness.csv"
+        out_folder="C:/data/oura"
     )
    
-    
+    sleep_data = data.sleep
+    print(sleep_data.head(15))
 
 if __name__== "__main__":
     main()
