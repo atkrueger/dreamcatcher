@@ -50,6 +50,7 @@ def create_url(token: str, start: str, end: str, datatype: str) -> str:
 
 def get_oura_personal_token() -> str:
 
+    print("OURA_PERSONAL_TOKEN" in os.environ)
     token = os.getenv("OURA_PERSONAL_TOKEN")
     if token ==None:
         token = input("Enter your oura personal token\n(see https://cloud.ouraring.com/personal-access-tokens):\n").strip()
@@ -57,8 +58,6 @@ def get_oura_personal_token() -> str:
         print("Token retrieved from OURA_PERSONAL_TOKEN environmental variable:\n", token)
 
     return token
-
-
 
 
 def get_oura_data(token :str, data_type: str, start = None, end = None, out_path : str = None) -> pd.DataFrame:
@@ -138,6 +137,9 @@ def main():
    
     sleep_data = data.sleep
     print(sleep_data.head(15))
+
+    print(data.activity.head(10))
+    print(data.readiness.head(10))
 
 if __name__== "__main__":
     main()
